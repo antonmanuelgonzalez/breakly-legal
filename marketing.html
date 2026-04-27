@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Breakly, Read greens like a tour caddy</title>
+  <meta name="description" content="Stop guessing the break. Breakly turns putt length, green speed, and slope into one aim point. Free, no ads, designed in Stockholm.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,30..100,0..1&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:           #EDE6D3;
+      --bg-soft:      #F2EBD8;
+      --bg-deeper:    #E5DBC0;
+      --surface:      #F5EFDE;
+      --green:        #586F4B;
+      --green-deep:   #3E5036;
+      --green-darker: #2D3A26;
+      --amber:        #C67B3C;
+      --amber-warm:   #B66A2C;
+      --ink:          #2A2620;
+      --ink-soft:     #5E574B;
+      --line:         #D8CFB8;
+      --line-soft:    #E5DCC4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .container-narrow {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    @media (max-width: 640px) {
+      .container, .container-narrow {
+        padding: 0 20px;
+      }
+    }
+
+    /* ============ NAV ============ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(237, 230, 211, 0.78);
+      border-bottom: 1px solid var(--line-soft);
+      padding: 18px 0;
+    }
+
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .brand svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .brand-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 500;
+      font-size: 21px;
+      letter-spacing: -0.4px;
+      font-variation-settings: "opsz" 144;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--green-deep);
+    }
+
+    @media (max-width: 640px) {
+      .nav-links {
+        gap: 18px;
+      }
+      .nav-links a {
+        font-size: 13px;
+      }
+    }
+
+    /* ============ HERO ============ */
+    .hero {
+      padding: 100px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    @media (max-width: 920px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 56px;
+      }
+      .hero {
+        padding: 60px 0 40px;
+      }
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      color: var(--amber);
+      margin-bottom: 28px;
+      padding: 7px 14px 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      background: var(--surface);
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .eyebrow-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+
+    h1.hero-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 320;
+      font-size: clamp(54px, 7.5vw, 92px);
+      line-height: 0.96;
+      letter-spacing: -2.4px;
+      color: var(--ink);
+      margin-bottom: 28px;
+      font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 1;
+      animation: fadeInUp 0.7s ease-out 0.1s both;
+    }
+
+    h1.hero-title em {
+      font-style: italic;
+      font-weight: 320;
+      color: var(--green-deep);
+      font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    }
+
+    h1.hero-title strong {
+      font-weight: 600;
+      color: var(--green-darker);
+      font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 0;
+    }
+
+    .hero-lead {
+      font-size: 19px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      max-width: 480px;
+      margin-bottom: 36px;
+      animation: fadeInUp 0.7s ease-out 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.7s ease-out 0.3s both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 26px;
+      border-radius: 100px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--green-deep);
+      color: var(--surface);
+    }
+
+    .btn-primary:hover {
+      background: var(--ink);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px -10px rgba(62, 80, 54, 0.45);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      padding: 14px 22px;
+    }
+
+    .btn-ghost:hover {
+      color: var(--green-deep);
+    }
+
+    .btn-ghost svg {
+      transition: transform 0.25s ease;
+    }
+
+    .btn-ghost:hover svg {
+      transform: translateX(3px);
+    }
+
+    /* Hero illustration */
+    .hero-visual {
+      position: relative;
+      animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+
+    .green-illustration {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      filter: drop-shadow(0 30px 60px rgba(62, 80, 54, 0.12));
+    }
+
+    /* ============ STATS BAR ============ */
+    .stats {
+      padding: 60px 0;
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--line-soft);
+      background: var(--bg-soft);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    .stat-number {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(48px, 6vw, 64px);
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -1.5px;
+      color: var(--green-deep);
+      margin-bottom: 8px;
+      font-variation-settings: "opsz" 144, "SOFT" 30, "WONK" 1;
+    }
+
+    .stat-number .unit {
+      font-size: 0.5em;
+      color: var(--amber);
+      font-weight: 400;
+    }
+
+    .stat-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    /* ============ SECTION ============ */
+    section.content-section {
+      padding: 120px 0;
+    }
+
+    @media (max-width: 720px) {
+      section.content-section {
+        padding: 80px 0;
+      }
+    }
+
+    .section-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 18px;
+    }
+
+    .section-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 350;
+      font-size: clamp(38px, 5vw, 56px);
+      line-height: 1.05;
+      letter-spacing: -1.4px;
+      color: var(--ink);
+      margin-bottom: 24px;
+      font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 1;
+      max-width: 700px;
+    }
+
+    .section-title em {
+      font-style: italic;
+      color: var(--green-deep);
+      font-weight: 320;
+    }
+
+    .section-lead {
+      font-size: 19px;
+      color: var(--ink-soft);
+      max-width: 600px;
+      margin-bottom: 60px;
+      line-height: 1.55;
+    }
+
+    /* ============ HOW IT WORKS ============ */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 60px;
+    }
+
+    @media (max-width: 880px) {
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 36px 32px;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .step:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px -16px rgba(62, 80, 54, 0.18);
+      border-color: var(--green);
+    }
+
+    .step-number {
+      font-family: 'Fraunces', serif;
+      font-size: 64px;
+      font-weight: 300;
+      color: var(--green-deep);
+      line-height: 1;
+      margin-bottom: 24px;
+      letter-spacing: -2px;
+      font-variation-settings: "opsz" 144, "SOFT" 100, "WONK" 1;
+    }
+
+    .step h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 12px;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+    }
+
+    .step p {
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+
+    /* ============ FEATURES ============ */
+    .features-section {
+      background: var(--bg-soft);
+      border-top: 1px solid var(--line-soft);
+      border-bottom: 1px solid var(--line-soft);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 60px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 880px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 540px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .feature {
+      background: var(--bg-soft);
+      padding: 36px 32px;
+      transition: background 0.25s ease;
+    }
+
+    .feature:hover {
+      background: var(--surface);
+    }
+
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      color: var(--green-deep);
+      margin-bottom: 20px;
+    }
+
+    .feature h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .feature p {
+      font-size: 14px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+    }
+
+    /* ============ CALIBRATION SECTION ============ */
+    .calibration {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    @media (max-width: 880px) {
+      .calibration {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+    }
+
+    .calibration-quote {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(28px, 3.2vw, 38px);
+      font-weight: 320;
+      line-height: 1.25;
+      letter-spacing: -0.8px;
+      color: var(--ink);
+      font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 1;
+    }
+
+    .calibration-quote em {
+      font-style: italic;
+      color: var(--green-deep);
+    }
+
+    .calibration-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .calibration-point {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .calibration-point-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber);
+      letter-spacing: 1.4px;
+      min-width: 24px;
+      padding-top: 4px;
+    }
+
+    .calibration-point h4 {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 6px;
+      letter-spacing: -0.2px;
+    }
+
+    .calibration-point p {
+      font-size: 15px;
+      color: var(--ink-soft);
+      line-height: 1.6;
+    }
+
+    /* ============ STORY SECTION ============ */
+    .story-section {
+      background: var(--green-darker);
+      color: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .story-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(198, 123, 60, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .story-content {
+      max-width: 720px;
+      position: relative;
+    }
+
+    .story-section .section-eyebrow {
+      color: var(--amber);
+    }
+
+    .story-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 320;
+      font-size: clamp(42px, 5.5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -1.6px;
+      color: var(--surface);
+      margin-bottom: 32px;
+      font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 1;
+    }
+
+    .story-title em {
+      font-style: italic;
+      color: var(--amber);
+      font-weight: 300;
+    }
+
+    .story-text {
+      font-size: 18px;
+      line-height: 1.65;
+      color: rgba(245, 239, 222, 0.78);
+      max-width: 560px;
+    }
+
+    .story-text p + p {
+      margin-top: 18px;
+    }
+
+    .story-signature {
+      margin-top: 48px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .signature-name {
+      font-family: 'Fraunces', serif;
+      font-size: 17px;
+      font-style: italic;
+      color: var(--surface);
+      font-weight: 400;
+    }
+
+    .signature-divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(245, 239, 222, 0.3);
+    }
+
+    .signature-loc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+
+    /* ============ CTA ============ */
+    .cta {
+      padding: 120px 0;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .cta {
+        padding: 80px 0;
+      }
+    }
+
+    .cta-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 320;
+      font-size: clamp(48px, 7vw, 80px);
+      line-height: 1;
+      letter-spacing: -2px;
+      color: var(--ink);
+      margin-bottom: 24px;
+      font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 1;
+    }
+
+    .cta-title em {
+      font-style: italic;
+      color: var(--green-deep);
+      font-weight: 320;
+    }
+
+    .cta-lead {
+      font-size: 19px;
+      color: var(--ink-soft);
+      max-width: 480px;
+      margin: 0 auto 48px;
+      line-height: 1.55;
+    }
+
+    .cta-meta {
+      margin-top: 32px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .cta-meta-divider {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    /* ============ FOOTER ============ */
+    footer {
+      padding: 48px 0 60px;
+      border-top: 1px solid var(--line-soft);
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--ink-soft);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--green-deep);
+    }
+
+    .footer-copy {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+    }
+
+    /* ============ ANIMATIONS ============ */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @keyframes drawPath {
+      from { stroke-dashoffset: 200; }
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes ballRoll {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(0, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAV ============ -->
+  <nav>
+    <div class="container nav-row">
+      <a href="index.html" class="brand">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="11" fill="#586F4B"/>
+          <path d="M6 15 Q 12 6 18 15" fill="none" stroke="#C67B3C" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="18" cy="15" r="2" fill="#C67B3C"/>
+          <circle cx="6" cy="15" r="1.5" fill="#F5EFDE"/>
+        </svg>
+        <span class="brand-name">Breakly</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#how">How it works</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="support.html">Support</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+
+        <div>
+          <span class="eyebrow">
+            <span class="eyebrow-dot"></span>
+            Now in TestFlight
+          </span>
+          <h1 class="hero-title">Stop guessing<br>the <em>break.</em></h1>
+          <p class="hero-lead">
+            Breakly turns putt length, green speed, and slope into one number you can act on. Caddy-style green reading, in three seconds.
+          </p>
+          <div class="hero-cta">
+            <a href="#cta" class="btn btn-primary">
+              Get Breakly
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </a>
+            <a href="#how" class="btn btn-ghost">
+              See how it works
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14"/>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero illustration: top-down view of green with break line -->
+        <div class="hero-visual">
+          <svg class="green-illustration" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="greenGrad" cx="50%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#7B9269"/>
+                <stop offset="60%" stop-color="#586F4B"/>
+                <stop offset="100%" stop-color="#3E5036"/>
+              </radialGradient>
+              <radialGradient id="ballGrad" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stop-color="#FFFFFF"/>
+                <stop offset="100%" stop-color="#E8E2D0"/>
+              </radialGradient>
+              <filter id="ballShadow">
+                <feGaussianBlur stdDeviation="2"/>
+              </filter>
+            </defs>
+
+            <!-- Green shape (organic blob) -->
+            <path d="M 60 220 Q 50 130 140 100 Q 240 60 320 90 Q 420 110 430 220 Q 440 320 360 380 Q 260 430 180 410 Q 80 380 60 280 Z"
+                  fill="url(#greenGrad)" />
+
+            <!-- Subtle grain pattern on green -->
+            <path d="M 60 220 Q 50 130 140 100 Q 240 60 320 90 Q 420 110 430 220 Q 440 320 360 380 Q 260 430 180 410 Q 80 380 60 280 Z"
+                  fill="none" stroke="#3E5036" stroke-width="0.5" opacity="0.3" stroke-dasharray="1,8" />
+
+            <!-- Slope shading (lighter on left, darker on right indicates slope) -->
+            <ellipse cx="180" cy="240" rx="140" ry="100" fill="#FFFFFF" opacity="0.06" />
+
+            <!-- Hole -->
+            <circle cx="320" cy="180" r="12" fill="#1A1F18" />
+            <circle cx="320" cy="180" r="12" fill="none" stroke="#2D3A26" stroke-width="2" />
+            <!-- Flag -->
+            <line x1="320" y1="180" x2="320" y2="100" stroke="#F5EFDE" stroke-width="2" />
+            <path d="M 320 100 L 350 110 L 320 122 Z" fill="#C67B3C" />
+
+            <!-- Break path (curved dotted line from ball to hole) -->
+            <path d="M 140 340 Q 180 220 320 180"
+                  fill="none"
+                  stroke="#F5EFDE"
+                  stroke-width="2.5"
+                  stroke-dasharray="4,7"
+                  stroke-linecap="round"
+                  opacity="0.85" />
+
+            <!-- Aim point (offset from hole) -->
+            <circle cx="245" cy="135" r="6" fill="#C67B3C" />
+            <circle cx="245" cy="135" r="11" fill="none" stroke="#C67B3C" stroke-width="1.5" opacity="0.5" />
+            <line x1="140" y1="340" x2="245" y2="135"
+                  stroke="#C67B3C"
+                  stroke-width="1.5"
+                  stroke-dasharray="2,4"
+                  opacity="0.7" />
+
+            <!-- Aim label -->
+            <text x="265" y="125" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600" fill="#C67B3C" letter-spacing="1">AIM</text>
+
+            <!-- Ball with shadow -->
+            <ellipse cx="142" cy="345" rx="9" ry="3" fill="#000000" opacity="0.25" filter="url(#ballShadow)" />
+            <circle cx="140" cy="340" r="9" fill="url(#ballGrad)" />
+            <circle cx="137" cy="337" r="2.5" fill="#FFFFFF" opacity="0.6" />
+
+            <!-- Distance indicator -->
+            <text x="105" y="370" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600" fill="#F5EFDE" letter-spacing="1" opacity="0.85">8.2 M</text>
+
+            <!-- Slope indicator (small arrow) -->
+            <g transform="translate(370, 320)">
+              <circle r="22" fill="#3E5036" />
+              <path d="M -8 4 L 0 -6 L 8 4 Z" fill="#C67B3C" />
+              <text y="14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="600" fill="#F5EFDE" letter-spacing="0.5">2.1%</text>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div>
+          <div class="stat-number">1,750</div>
+          <div class="stat-label">Tour reads calibrated against</div>
+        </div>
+        <div>
+          <div class="stat-number">3<span class="unit">s</span></div>
+          <div class="stat-label">To read any putt</div>
+        </div>
+        <div>
+          <div class="stat-number">±2<span class="unit">cm</span></div>
+          <div class="stat-label">Aim accuracy at tour speed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS ============ -->
+  <section class="content-section" id="how">
+    <div class="container">
+      <span class="section-eyebrow">// How it works</span>
+      <h2 class="section-title">Three taps to a <em>confident read.</em></h2>
+      <p class="section-lead">
+        Most golfers misread breaks by 30 to 50 percent. Pros use a caddy. Amateurs guess. Breakly closes that gap with the same physics tour caddies use, in your pocket.
+      </p>
+
+      <div class="steps">
+
+        <div class="step">
+          <div class="step-number">01</div>
+          <h3>Stand behind your ball</h3>
+          <p>Pick the line you want to play. Stand behind the ball looking at the hole, the way you would normally read a putt.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">02</div>
+          <h3>Measure the slope</h3>
+          <p>Hold your iPhone flat on the green. Breakly reads the slope from your phone's motion sensors. Or enter slope manually if you prefer.</p>
+        </div>
+
+        <div class="step">
+          <div class="step-number">03</div>
+          <h3>Read your aim point</h3>
+          <p>Enter putt length and green speed. Breakly tells you exactly how far outside the cup to aim, in centimeters. No more guessing how much to play.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="content-section features-section" id="features">
+    <div class="container">
+      <span class="section-eyebrow">// What's inside</span>
+      <h2 class="section-title">Built for <em>real greens.</em></h2>
+      <p class="section-lead">
+        Designed for use on the green, in landscape mode, on the course. Every feature exists because a golfer asked for it.
+      </p>
+
+      <div class="features-grid">
+
+        <div class="feature">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="6" y="2" width="12" height="20" rx="2"/>
+            <line x1="12" y1="18" x2="12" y2="18.01"/>
+            <path d="M9 6h6" opacity="0.4"/>
+          </svg>
+          <h3>Slope from sensors</h3>
+          <p>Your iPhone's motion sensors measure slope to 0.1 percent. No external hardware needed.</p>
+        </div>
+
+        <div class="feature">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+          </svg>
+          <h3>Stimp 7 to 14</h3>
+          <p>Adjusts for everything from soft member greens to lightning-fast tour conditions.</p>
+        </div>
+
+        <div class="feature">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <path d="M3 12l4-4M3 12l4 4M21 12l-4-4M21 12l-4 4"/>
+          </svg>
+          <h3>1 to 20 meters</h3>
+          <p>Works for everything from short tap-ins to long lag putts across the green.</p>
+        </div>
+
+        <div class="feature">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 3a9 9 0 0 1 0 18M12 3v18"/>
+          </svg>
+          <h3>Three palettes</h3>
+          <p>Oak, sage, and slate themes. Pick what reads best in your light, on your eyes.</p>
+        </div>
+
+        <div class="feature">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2a5 5 0 0 0-5 5c0 2 1 3 1 5 0 1-1 2-1 3 0 1 1 2 1 3a5 5 0 0 0 8 0c0-1 1-2 1-3 0-1-1-2-1-3 0-2 1-3 1-5a5 5 0 0 0-5-5z"/>
+          </svg>
+          <h3>Sign in with Apple</h3>
+          <p>One tap to sign in. No email, no password, no tracking. Your reads sync across devices.</p>
+        </div>
+
+        <div class="feature">
+          <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M22 12h-4M2 12h4" opacity="0.4"/>
+          </svg>
+          <h3>Landscape mode</h3>
+          <p>Optimized for use on the green. Big numbers, easy taps, designed for sun-bleached screens.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CALIBRATION ============ -->
+  <section class="content-section">
+    <div class="container">
+      <div class="calibration">
+
+        <div>
+          <span class="section-eyebrow">// The science</span>
+          <p class="calibration-quote">
+            Built on <em>physics.</em><br>
+            Refined with <em>data.</em>
+          </p>
+        </div>
+
+        <ul class="calibration-points">
+          <li class="calibration-point">
+            <span class="calibration-point-num">01</span>
+            <div>
+              <h4>Tour-grade physics model</h4>
+              <p>RK4 numerical integration of the ball's trajectory across slope and friction, the same approach used in tour caddy systems.</p>
+            </div>
+          </li>
+          <li class="calibration-point">
+            <span class="calibration-point-num">02</span>
+            <div>
+              <h4>1,750 tour reads</h4>
+              <p>Calibrated against pro caddy reads at major championship venues. The model knows what a caddy would say.</p>
+            </div>
+          </li>
+          <li class="calibration-point">
+            <span class="calibration-point-num">03</span>
+            <div>
+              <h4>Hybrid correction layer</h4>
+              <p>Physics provides the foundation. Empirical data corrects for green-specific quirks like grain and crown effects.</p>
+            </div>
+          </li>
+        </ul>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STORY ============ -->
+  <section class="content-section story-section">
+    <div class="container">
+      <div class="story-content">
+        <span class="section-eyebrow">// The maker</span>
+        <h2 class="story-title">Designed in <em>Stockholm.</em><br>Built for golfers.</h2>
+        <div class="story-text">
+          <p>
+            Breakly started where most golf tools start, on the green, three feet from the hole, on a putt that should not have been hard. The break was small. The miss was bigger. The next read was a guess.
+          </p>
+          <p>
+            There had to be a better way than guessing. The tour has caddies, lasers, AimPoint specialists. The rest of us have eyes and hope. So we built the tool we wanted to use. Physics on the inside. Three taps on the outside. Calibrated against real reads.
+          </p>
+        </div>
+        <div class="story-signature">
+          <span class="signature-name">Anton Gonzalez</span>
+          <span class="signature-divider"></span>
+          <span class="signature-loc">Stockholm, 2026</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="cta" id="cta">
+    <div class="container-narrow">
+      <h2 class="cta-title">Read better.<br><em>Putt closer.</em></h2>
+      <p class="cta-lead">
+        Available now in TestFlight. Coming soon to the App Store. Free, no ads, no subscription.
+      </p>
+      <a href="mailto:valueinvestingsweden@gmail.com?subject=Breakly%20TestFlight%20access" class="btn btn-primary">
+        Request TestFlight access
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+      <div class="cta-meta">
+        <span>iOS 17+</span>
+        <span class="cta-meta-divider"></span>
+        <span>Free</span>
+        <span class="cta-meta-divider"></span>
+        <span>No ads</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="container footer-row">
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="support.html">Support</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms</a></li>
+      </ul>
+      <span class="footer-copy">© 2026 Anton Gonzalez</span>
+    </div>
+  </footer>
+
+</body>
+</html>
